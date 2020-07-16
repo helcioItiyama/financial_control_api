@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
 const TransactionModel = require('../models/TransactionModel');
-const { create, deleteOne } = require('../models/TransactionModel');
 
 module.exports = {
   async list(req, res) {
@@ -19,12 +17,25 @@ module.exports = {
       }
 
       const findTransactions = await TransactionModel.find({year, month});
-      
+
       if(!findTransactions) {
         res.status(400).send('Transactions not found')
       }
 
-      res.send(findTransactions);
+      const { income, outcome } = findTransactions.reduce((total, {type, value}) => {
+        if(type === '+') {
+          total.income += value;
+        } else if (type === '-') {
+          total.outcome += value
+        }
+        return total;
+      }, {income: 0, outcome: 0})
+
+      const balance = income - outcome;
+
+      const transactionNumber = findTransactions.length;
+
+      res.send({findTransactions, income, outcome, transactionNumber, balance});
 
     } catch(err) {
       res.status(500).send(err)

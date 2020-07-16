@@ -1,6 +1,6 @@
 const express = require('express');
 const transactionRouter = express.Router();
-const transactionService = require('../services/transactionService.js');
+const transactionService = require('../services/transactionService');
 
 transactionRouter.get('/', transactionService.list);
 transactionRouter.post('/', transactionService.create);
