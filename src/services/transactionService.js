@@ -2,6 +2,23 @@ const mongoose = require('mongoose');
 const TransactionModel = require('../models/TransactionModel');
 
 module.exports = {
+  async listAllYears(req, res) {
+    try {
+      const getAllYears = [];
+      const getAllTransactions = await TransactionModel.find().sort({year: -1, month: -1});
+      
+      getAllTransactions.forEach(({yearMonth}) => {
+        if (!getAllYears.includes(yearMonth)) {
+          getAllYears.push(yearMonth)
+        }
+      });
+
+      res.send(getAllYears);
+    } catch(err) {
+      res.status(500).send(err)
+    }
+  },
+
   async list(req, res) {
     try {
       const {period} = req.query;
@@ -16,7 +33,7 @@ module.exports = {
         res.status(400).send("It's necessary to inform the params \"period\", follor by date format as yyyy-mm");
       }
 
-      const findTransactions = await TransactionModel.find({year, month});
+      const findTransactions = await TransactionModel.find({year, month}).sort({year: 1, month: 1, day: 1});
 
       if(!findTransactions) {
         res.status(400).send('Transactions not found')
