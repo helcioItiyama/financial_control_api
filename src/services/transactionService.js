@@ -21,22 +21,41 @@ module.exports = {
 
   async list(req, res) {
     try {
-      const {period} = req.query;
-
+      const { period } = req.query;
+      const { filter } = req.query;
+      
       if(!period || period && !period.includes('-')) {
         res.status(400).send("It's necessary to inform the params \"period\", follor by date format as yyyy-mm");
       }
-
+      
       const [year, month] = period.split('-');
-
+      
       if(month.length !== 2 || year.length !== 4) {
         res.status(400).send("It's necessary to inform the params \"period\", follor by date format as yyyy-mm");
       }
 
-      const findTransactions = await TransactionModel.find({year, month}).sort({year: 1, month: 1, day: 1});
-
+      let findTransactions = await TransactionModel.find({year, month}).sort({year: 1, month: 1, day: 1});
+      
       if(!findTransactions) {
         res.status(400).send('Transactions not found')
+      }
+
+      const formattedLetter = (word) => {
+        return word.replace(/[áàãâää]/ig, "a")
+            .replace(/[éèêë]/ig, "e")
+            .replace(/[íìîï]/ig, "i")
+            .replace(/[óòôõö]/ig, "o")
+            .replace(/[úùûü]/ig, "u")
+            .replace(/[ç]/ig, "c")
+            .replace(/[ñ]/ig, "n")
+            .toLowerCase();
+      }
+
+      if(filter) {
+        findTransactions = findTransactions.filter(transaction => {
+          const filteredTransaction = transaction.category + transaction.description;
+          return formattedLetter(filteredTransaction).includes(formattedLetter(filter))
+        })
       }
 
       const { income, outcome } = findTransactions.reduce((total, {type, value}) => {
